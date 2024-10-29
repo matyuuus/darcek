@@ -366,7 +366,6 @@
         function setupCanvasEvents(canvas) {
     // Mouse events
     canvas.addEventListener('mousedown', (e) => {
-        e.preventDefault();
         isDragging = true;
         activeCanvas = canvas;
         lastPosition = getCoordinates(e, canvas);
@@ -376,13 +375,12 @@
         isDragging = false;
     });
 
-    canvas.addEventListener('mousemove', (e) => {
-        if (isDragging) draw(e);
-    });
+    canvas.addEventListener('mousemove', draw);
+    canvas.addEventListener('mouseleave', () => isDragging = false);
 
     // Touch events
     canvas.addEventListener('touchstart', (e) => {
-        e.preventDefault(); 
+        e.preventDefault(); // Prevent scrolling
         isDragging = true;
         activeCanvas = canvas;
         lastPosition = getCoordinates(e.touches[0], canvas);
@@ -393,49 +391,67 @@
     });
 
     canvas.addEventListener('touchmove', (e) => {
-        e.preventDefault(); 
-        if (isDragging) draw(e.touches[0]);
+        e.preventDefault(); // Prevent scrolling
+        draw(e.touches[0]);
     });
 }
 
 
+        function startDrawing(touchEvent) {
+            isDragging = true;
+            lastPosition = getCoordinates(touchEvent, activeCanvas);
+        }
+
+        function stopDrawing() {
+            isDragging = false;
+        }
 
 
 
-function getCoordinates(e, canvas) {
+        function getCoordinates(e, canvas) {
     const rect = canvas.getBoundingClientRect();
     const scale = window.devicePixelRatio || 1;
-    const x = (e.clientX - rect.left) * scale;
-    const y = (e.clientY - rect.top) * scale;
+
+    let x, y;
+    if (e.touches) {
+        x = (e.touches[0].clientX - rect.left) * scale;
+        y = (e.touches[0].clientY - rect.top) * scale;
+    } else {
+        x = (e.clientX - rect.left) * scale;
+        y = (e.clientY - rect.top) * scale;
+    }
+    
     return { x, y };
 }
 
 
+
+
         function draw(e) {
-    if (!isDragging || !activeCanvas) return;
-    e.preventDefault();
+            if (!isDragging || !activeCanvas) return;
+            e.preventDefault();
 
-    const ctx = activeCanvas.getContext('2d');
-    const coords = getCoordinates(e, activeCanvas);
+            const ctx = activeCanvas.getContext('2d');
+            const coords = getCoordinates(e, activeCanvas);
 
-    ctx.globalCompositeOperation = 'destination-out';
-    ctx.lineWidth = 35 * (window.devicePixelRatio || 1);
-    ctx.lineCap = 'round';
-    ctx.lineJoin = 'round';
+            ctx.globalCompositeOperation = 'destination-out';
+            ctx.lineWidth = 35 * (window.devicePixelRatio || 1);
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
 
-    ctx.beginPath();
-    ctx.moveTo(lastPosition.x, lastPosition.y);
-    ctx.lineTo(coords.x, coords.y);
-    ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(lastPosition.x, lastPosition.y);
+            ctx.lineTo(coords.x, coords.y);
+            ctx.stroke();
 
-    lastPosition = coords;
+            lastPosition = coords;
 
-    if (activeCanvas.id === 'bonusCanvas') {
-        checkBonusProgress(activeCanvas);
-    } else if (activeCanvas.id === 'gameCanvas') { // Only check game progress for game canvas
-        checkGameProgress(activeCanvas);
-    }
-}
+            if (activeCanvas.id === 'bonusCanvas') {
+                checkBonusProgress(activeCanvas);
+            } else if (activeCanvas.id === 'gameCanvas') { // Only check game progress for game canvas
+                checkGameProgress(activeCanvas);
+            }
+        }
 
 
 
