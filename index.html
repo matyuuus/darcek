@@ -4,11 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Scratch Card Game</title>
-    <!-- Production React -->
-    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    <!-- Add HTmx for simpler DOM manipulation -->
-    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
     <style>
         body {
             margin: 0;
@@ -21,6 +16,7 @@
             justify-content: center;
         }
         .card {
+            width: 100%;
             max-width: 400px;
             background: white;
             border-radius: 8px;
@@ -54,37 +50,76 @@
         }
         .game-title {
             text-align: center;
-            font-size: 20px;
             margin-bottom: 24px;
         }
-        canvas {
-            background: #ccc;
-            border-radius: 4px;
-            cursor: pointer;
-            touch-action: none;
+        .game-title h2 {
+            margin: 0 0 8px 0;
+            font-size: 24px;
+        }
+        .canvas-section {
+            margin: 30px auto;
+            width: 260px;
         }
         .canvas-container {
             position: relative;
-            width: 260px;
-            margin: 20px auto;
+            margin: 0 auto;
         }
-        .numbers-container {
+        .numbers-section {
+            height: 80px;
+        }
+        .game-section {
+            height: 200px;
+            margin-top: 40px;
+        }
+        .content-layer {
             position: absolute;
             top: 0;
             left: 0;
-            right: 0;
-            bottom: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            width: 100%;
+            height: 100%;
             background: rgba(255,255,255,0.1);
             backdrop-filter: blur(4px);
             border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1;
+        }
+        .numbers-display {
+            display: flex;
+            gap: 24px;
             font-size: 20px;
             font-weight: bold;
         }
-        .number {
-            margin: 0 20px;
+        .game-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            width: 100%;
+            height: 100%;
+            padding: 16px;
+            box-sizing: border-box;
+        }
+        .game-cell {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+        .game-cell strong {
+            font-size: 18px;
+            margin-bottom: 4px;
+        }
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+            z-index: 2;
+            border-radius: 4px;
         }
         .win-message {
             position: fixed;
@@ -93,75 +128,166 @@
             display: none;
             align-items: center;
             justify-content: center;
-            text-align: center;
             z-index: 1000;
         }
         .win-content {
-            padding: 20px;
+            background: rgba(0,0,0,0.9);
+            padding: 32px;
+            border-radius: 8px;
+            text-align: center;
+            color: white;
         }
         .play-button {
             background: linear-gradient(to right, #9333ea, #ec4899);
             color: white;
             border: none;
-            padding: 8px 24px;
-            border-radius: 20px;
+            padding: 12px 32px;
+            border-radius: 24px;
             cursor: pointer;
             font-size: 16px;
             margin-top: 16px;
+            z-index: 1001;
+            position: relative;
         }
         .play-button:hover {
             opacity: 0.9;
         }
+        .section-title {
+            text-align: center;
+            margin-bottom: 8px;
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        #bonusContainer {
+    display: none;
+    text-align: center;
+    padding: 24px;
+    background: linear-gradient(to right, #9333ea, #ec4899);
+    color: white;
+}
+.bonus-container {
+    position: relative;
+    width: 260px;
+    height: 200px;
+    margin: 30px auto;
+}
+.bonus-grid {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    padding: 16px;
+    box-sizing: border-box;
+    background: rgba(255,255,255,0.1);
+    backdrop-filter: blur(4px);
+    border-radius: 4px;
+    z-index: 1;
+}
+.bonus-cell {
+    font-size: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255,255,255,0.1);
+    border-radius: 4px;
+}
     </style>
 </head>
 <body>
     <div class="card">
-        <!-- Gift View -->
         <div id="giftView" class="gift-container" onclick="startGame()">
             <div class="gift-title">Všetko najlepšie láska</div>
             <div class="gift-emoji">🎁</div>
             <div class="gift-text">Klikni na darček</div>
         </div>
 
-        <!-- Game View -->
         <div id="gameContainer">
             <div class="game-title">
                 <h2>Meninové čísla</h2>
-                <p style="font-size: 14px; opacity: 0.9">Nájdi číslo, ktoré sa zhoduje s tým tvojím a vyhraj uvedenú sumu</p>
+                <p style="font-size: 14px; opacity: 0.9">
+                    Nájdi číslo, ktoré sa zhoduje s tým tvojím a vyhraj uvedenú sumu
+                </p>
             </div>
 
-            <!-- Your Numbers -->
-            <div class="canvas-container">
-                <div class="numbers-container">
-                    <span class="number">4</span>
-                    <span class="number">30</span>
-                    <span class="number">11</span>
-                    <span class="number">9</span>
+            <div class="canvas-section">
+                <div class="section-title">Tvoje čísla</div>
+                <div class="canvas-container numbers-section">
+                    <div class="content-layer">
+                        <div class="numbers-display">
+                            <span>4</span>
+                            <span>30</span>
+                            <span>11</span>
+                            <span>9</span>
+                        </div>
+                    </div>
+                    <canvas id="numbersCanvas"></canvas>
                 </div>
-                <canvas id="numbersCanvas" width="260" height="80"></canvas>
-            </div>
 
-            <!-- Game Grid -->
-            <div class="canvas-container">
-                <canvas id="gameCanvas" width="260" height="200"></canvas>
+                <div class="section-title" style="margin-top: 30px;">Hra</div>
+                <div class="canvas-container game-section">
+                    <div class="content-layer">
+                        <div class="game-grid">
+                            <div class="game-cell"><strong>15</strong><small>10€</small></div>
+                            <div class="game-cell"><strong>7</strong><small>15€</small></div>
+                            <div class="game-cell"><strong>4</strong><small>5€</small></div>
+                            <div class="game-cell"><strong>23</strong><small>20€</small></div>
+                            <div class="game-cell"><strong>25</strong><small>10€</small></div>
+                            <div class="game-cell"><strong>18</strong><small>15€</small></div>
+                            <div class="game-cell"><strong>16</strong><small>5€</small></div>
+                            <div class="game-cell"><strong>14</strong><small>20€</small></div>
+                            <div class="game-cell"><strong>22</strong><small>10€</small></div>
+                        </div>
+                    </div>
+                    <canvas id="gameCanvas"></canvas>
+                </div>
             </div>
         </div>
 
-        <!-- Win Message -->
         <div id="winMessage" class="win-message">
             <div class="win-content">
-                <h3 style="font-size: 24px; margin-bottom: 8px">Gratulujem! 🎉</h3>
+                <h3 style="font-size: 24px; margin: 0 0 16px 0">Gratulujem! 🎉</h3>
                 <p style="margin-bottom: 16px">Vyhral/a si 5€ v tejto lotérii!</p>
                 <p style="margin-bottom: 16px">Chceš si zahrať o bonus?</p>
                 <button class="play-button" onclick="startBonus()">Hrat!</button>
             </div>
         </div>
+
+        <div id="bonusContainer">
+            <h2>Bonus hra</h2>
+            <p>Nájdi tri rovnaké symboly a vyhraj cenu, ktorá sa za nimi schováva</p>
+            <div class="bonus-container">
+                <div class="bonus-grid">
+                    <div class="bonus-cell">☕</div>
+                    <div class="bonus-cell">🌈</div>
+                    <div class="bonus-cell">🌟</div>
+                    <div class="bonus-cell">🍀</div>
+                    <div class="bonus-cell">🍀</div>
+                    <div class="bonus-cell">🌈</div>
+                    <div class="bonus-cell">☕</div>
+                    <div class="bonus-cell">🌟</div>
+                    <div class="bonus-cell">☕</div>
+                </div>
+                <canvas id="bonusCanvas"></canvas>
+            </div>
+        </div>
+        <div id="bonusWinMessage" class="win-message">
+            <div class="win-content">
+                <h3 style="font-size: 24px; margin: 0 0 16px 0">Gratulujem! 🎉</h3>
+                <p style="margin-bottom: 16px">Podarilo sa ti nájsť 3 rovnaké symboly!</p>
+                <div style="font-size: 32px; margin: 20px 0;">☕ ☕ ☕</div>
+                <p style="margin-bottom: 16px">Tvoja cena ti bude odovzdaná už čoskoro! ❤️</p>
+            </div>
+        </div>
     </div>
 
     <script>
+        let activeCanvas;
         let isDragging = false;
-        let lastPosition = null;
-        let activeCanvas = null;
+        let lastPosition = { x: 0, y: 0 };
 
         function startGame() {
             document.getElementById('giftView').style.display = 'none';
@@ -170,95 +296,111 @@
         }
 
         function initializeCanvases() {
-            const numbersCanvas = document.getElementById('numbersCanvas');
             const gameCanvas = document.getElementById('gameCanvas');
-            
-            initializeCanvas(numbersCanvas);
+            const numbersCanvas = document.getElementById('numbersCanvas');
+            setCanvasSize(gameCanvas, 260, 200);
+            setCanvasSize(numbersCanvas, 260, 80);
             initializeCanvas(gameCanvas);
-            
-            setupCanvasEvents(numbersCanvas);
+            initializeCanvas(numbersCanvas);
             setupCanvasEvents(gameCanvas);
+            setupCanvasEvents(numbersCanvas);
+        }
+
+        function startBonus() {
+            document.getElementById('gameContainer').style.display = 'none';
+            document.getElementById('winMessage').style.display = 'none';
+            document.getElementById('bonusContainer').style.display = 'block';
+            initializeBonusCanvas();
+        }
+
+        function initializeBonusCanvas() {
+    const bonusCanvas = document.getElementById('bonusCanvas');
+    setCanvasSize(bonusCanvas, 260, 200); // upravená šírka na 260px aby sedela s kontajnerom
+    initializeCanvas(bonusCanvas);
+    setupCanvasEvents(bonusCanvas);
+}
+
+        function setCanvasSize(canvas, width, height) {
+            canvas.width = width * window.devicePixelRatio;
+            canvas.height = height * window.devicePixelRatio;
+            canvas.style.width = width + 'px';
+            canvas.style.height = height + 'px';
         }
 
         function initializeCanvas(canvas) {
             const ctx = canvas.getContext('2d');
-            ctx.fillStyle = '#CCCCCC';
+            ctx.fillStyle = 'rgba(200, 200, 200, 1)';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
         }
 
         function setupCanvasEvents(canvas) {
-            canvas.addEventListener('mousedown', startDrawing);
+            canvas.addEventListener('mousedown', (e) => {
+                isDragging = true;
+                activeCanvas = canvas;
+                lastPosition = getCoordinates(e, canvas);
+            });
+
+            canvas.addEventListener('mouseup', () => {
+                isDragging = false;
+            });
+
             canvas.addEventListener('mousemove', draw);
-            canvas.addEventListener('mouseup', stopDrawing);
-            canvas.addEventListener('mouseleave', stopDrawing);
-            
-            canvas.addEventListener('touchstart', handleTouchStart);
-            canvas.addEventListener('touchmove', handleTouchMove);
-            canvas.addEventListener('touchend', stopDrawing);
+            canvas.addEventListener('mouseleave', () => isDragging = false);
         }
 
         function getCoordinates(e, canvas) {
             const rect = canvas.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
+            const scale = window.devicePixelRatio || 1;
+            const x = (e.clientX - rect.left) * scale;
+            const y = (e.clientY - rect.top) * scale;
             return { x, y };
-        }
-
-        function startDrawing(e) {
-            isDragging = true;
-            activeCanvas = e.target;
-            const coords = getCoordinates(e, activeCanvas);
-            lastPosition = coords;
         }
 
         function draw(e) {
             if (!isDragging || !activeCanvas) return;
+            e.preventDefault();
 
             const ctx = activeCanvas.getContext('2d');
             const coords = getCoordinates(e, activeCanvas);
+            const scale = window.devicePixelRatio || 1;
 
             ctx.globalCompositeOperation = 'destination-out';
-            ctx.lineWidth = 40;
+            ctx.lineWidth = 35 * scale; // Zmenši veľkosť štetca na stieranie
             ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
 
-            if (lastPosition) {
-                ctx.beginPath();
-                ctx.moveTo(lastPosition.x, lastPosition.y);
-                ctx.lineTo(coords.x, coords.y);
-                ctx.stroke();
-            }
+            ctx.beginPath();
+            ctx.moveTo(lastPosition.x, lastPosition.y);
+            ctx.lineTo(coords.x, coords.y);
+            ctx.stroke();
 
             lastPosition = coords;
-            checkRevealProgress(activeCanvas);
+
+            // Kontrola pokroku pre bonusový canvas
+            if (activeCanvas.id === 'bonusCanvas') {
+                checkBonusProgress(activeCanvas);
+            } else {
+                checkGameProgress(activeCanvas);
+            }
         }
 
-        function handleTouchStart(e) {
-            e.preventDefault();
-            const touch = e.touches[0];
-            const mouseEvent = new MouseEvent('mousedown', {
-                clientX: touch.clientX,
-                clientY: touch.clientY
-            });
-            startDrawing(mouseEvent);
-        }
+        function checkBonusProgress(canvas) {
+    const ctx = canvas.getContext('2d');
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const pixels = imageData.data;
+    let transparent = 0;
 
-        function handleTouchMove(e) {
-            e.preventDefault();
-            const touch = e.touches[0];
-            const mouseEvent = new MouseEvent('mousemove', {
-                clientX: touch.clientX,
-                clientY: touch.clientY
-            });
-            draw(mouseEvent);
-        }
+    for (let i = 0; i < pixels.length; i += 4) {
+        if (pixels[i + 3] < 127) transparent++;
+    }
 
-        function stopDrawing() {
-            isDragging = false;
-            activeCanvas = null;
-            lastPosition = null;
-        }
+    const progress = transparent / (pixels.length / 4);
+    if (progress > 0.89) {
+        document.getElementById('bonusWinMessage').style.display = 'flex';
+    }
+}
 
-        function checkRevealProgress(canvas) {
+        function checkGameProgress(canvas) {
             const ctx = canvas.getContext('2d');
             const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
             const pixels = imageData.data;
@@ -269,15 +411,14 @@
             }
 
             const progress = transparent / (pixels.length / 4);
-            if (progress > 0.5) {
+            if (progress > 0.89) {
                 document.getElementById('winMessage').style.display = 'flex';
             }
         }
 
-        function startBonus() {
-            // Implement bonus game logic here
-            alert('Bonus hra sa pripravuje! 🎮');
-        }
+        document.addEventListener('mouseup', () => {
+            isDragging = false;
+        });
     </script>
 </body>
 </html>
