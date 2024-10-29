@@ -432,7 +432,7 @@ function getCoordinates(e, canvas) {
 
     if (activeCanvas.id === 'bonusCanvas') {
         checkBonusProgress(activeCanvas);
-    } else {
+    } else if (activeCanvas.id === 'gameCanvas') { // Only check game progress for game canvas
         checkGameProgress(activeCanvas);
     }
 }
