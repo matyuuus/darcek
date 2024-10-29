@@ -763,7 +763,7 @@
             const progress = (transparent / (pixels.length / 4)) * 100;
             updateProgressBar(canvas.id, progress);
             
-            if (progress > 92) { // Lowered threshold for better UX
+            if (progress > 96) { // Lowered threshold for better UX
                 checkGameCompletion(canvas.id);
             }
         }
