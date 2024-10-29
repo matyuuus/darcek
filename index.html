@@ -465,6 +465,24 @@
                 font-size: 20px;
             }
         }
+        .confetti-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 999;
+}
+
+.confetti-particle {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    pointer-events: none;
+    will-change: transform;
+}
     </style>
 </head>
 <body>
@@ -599,26 +617,21 @@
             </div>
         </div>
     </div>
-
     <script>
-        // State management
         let activeCanvas = null;
         let isDragging = false;
         let lastPosition = { x: 0, y: 0 };
         let isGameComplete = false;
         let isBonusComplete = false;
         
-        // Initialize game
         function startGame() {
             const giftView = document.getElementById('giftView');
             const gameContainer = document.getElementById('gameContainer');
             
-            // Fade out gift view
             giftView.style.opacity = '0';
             setTimeout(() => {
                 giftView.style.display = 'none';
                 gameContainer.style.display = 'block';
-                // Fade in game container
                 setTimeout(() => {
                     gameContainer.classList.add('visible');
                 }, 50);
@@ -627,19 +640,18 @@
             initializeCanvases();
         }
         
-        // Canvas initialization
         function initializeCanvases() {
-    const gameCanvas = document.getElementById('gameCanvas');
-    const numbersCanvas = document.getElementById('numbersCanvas');
-    
-    setCanvasSize(gameCanvas, 280, 240);    // Updated dimensions
-    setCanvasSize(numbersCanvas, 280, 100); // Updated dimensions
-    
-    [gameCanvas, numbersCanvas].forEach(canvas => {
-        initializeCanvas(canvas);
-        setupCanvasEvents(canvas);
-    });
-}
+            const gameCanvas = document.getElementById('gameCanvas');
+            const numbersCanvas = document.getElementById('numbersCanvas');
+            
+            setCanvasSize(gameCanvas, 280, 240);
+            setCanvasSize(numbersCanvas, 280, 100);
+            
+            [gameCanvas, numbersCanvas].forEach(canvas => {
+                initializeCanvas(canvas);
+                setupCanvasEvents(canvas);
+            });
+        }
         
         function setCanvasSize(canvas, width, height) {
             const scale = window.devicePixelRatio || 1;
@@ -659,7 +671,6 @@
             const width = canvas.width / (window.devicePixelRatio || 1);
             const height = canvas.height / (window.devicePixelRatio || 1);
             
-            // Create slightly textured scratch surface
             ctx.fillStyle = 'rgba(200, 200, 200, 1)';
             ctx.fillRect(0, 0, width, height);
             
@@ -674,7 +685,6 @@
             }
         }
         
-        // Event handling
         function setupCanvasEvents(canvas) {
             // Mouse Events
             canvas.addEventListener('mousedown', handleStart);
@@ -722,16 +732,13 @@
             const currentPosition = getCoordinates(e, activeCanvas);
             const scale = window.devicePixelRatio || 1;
             
-            // Reset transformation matrix
             ctx.setTransform(scale, 0, 0, scale, 0, 0);
             
-            // Setup scratching effect
             ctx.globalCompositeOperation = 'destination-out';
             ctx.lineWidth = 35;
             ctx.lineCap = 'round';
             ctx.lineJoin = 'round';
             
-            // Draw scratch line
             ctx.beginPath();
             ctx.moveTo(lastPosition.x, lastPosition.y);
             ctx.lineTo(currentPosition.x, currentPosition.y);
@@ -739,8 +746,11 @@
             
             lastPosition = currentPosition;
             
-            // Update progress and check completion
-            updateProgress(activeCanvas);
+            if (activeCanvas.id === 'bonusCanvas') {
+                checkBonusProgress(activeCanvas);
+            } else if (activeCanvas.id === 'gameCanvas') {
+                checkGameProgress(activeCanvas);
+            }
         }
         
         function handleEnd(e) {
@@ -749,8 +759,7 @@
             activeCanvas = null;
         }
         
-        // Progress tracking
-        function updateProgress(canvas) {
+        function checkGameProgress(canvas) {
             const ctx = canvas.getContext('2d');
             const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
             const pixels = imageData.data;
@@ -760,89 +769,102 @@
                 if (pixels[i + 3] < 127) transparent++;
             }
         
-            const progress = (transparent / (pixels.length / 4)) * 100;
-            updateProgressBar(canvas.id, progress);
-            
-            if (progress > 96) { // Lowered threshold for better UX
-                checkGameCompletion(canvas.id);
+            const progress = transparent / (pixels.length / 4);
+            if (progress > 0.9) {  // Changed to 90%
+                document.getElementById('winMessage').style.display = 'flex';
             }
         }
         
-        function updateProgressBar(canvasId, progress) {
-            let progressBar;
-            switch(canvasId) {
-                case 'numbersCanvas':
-                    progressBar = document.getElementById('numbersProgress');
-                    break;
-                case 'gameCanvas':
-                    progressBar = document.getElementById('gameProgress');
-                    break;
-                case 'bonusCanvas':
-                    progressBar = document.getElementById('bonusProgress');
-                    break;
-            }
-            if (progressBar) {
-                progressBar.style.width = `${progress}%`;
-            }
-        }
+        function checkBonusProgress(canvas) {
+            const ctx = canvas.getContext('2d');
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const pixels = imageData.data;
+            let transparent = 0;
         
-        // Game completion checks
-        function checkGameCompletion(canvasId) {
-            switch(canvasId) {
-                case 'gameCanvas':
-                    if (!isGameComplete) {
-                        isGameComplete = true;
-                        showWinMessage();
-                    }
-                    break;
-                case 'bonusCanvas':
-                    if (!isBonusComplete) {
-                        isBonusComplete = true;
-                        showBonusWinMessage();
-                    }
-                    break;
+            for (let i = 0; i < pixels.length; i += 4) {
+                if (pixels[i + 3] < 127) transparent++;
             }
-        }
         
-        function showWinMessage() {
-            const winMessage = document.getElementById('winMessage');
-            winMessage.style.display = 'flex';
-            // Add animation class
-            winMessage.querySelector('.win-content').style.animation = 'scaleIn 0.3s ease-out';
-        }
-        
-        function showBonusWinMessage() {
-            const bonusWinMessage = document.getElementById('bonusWinMessage');
-            bonusWinMessage.style.display = 'flex';
-            bonusWinMessage.querySelector('.win-content').style.animation = 'scaleIn 0.3s ease-out';
+            const progress = transparent / (pixels.length / 4);
+            if (progress > 0.9) {  // Changed to 90%
+                document.getElementById('bonusWinMessage').style.display = 'flex';
+                createConfetti();  // Added confetti on bonus win
+            }
         }
         
         function startBonus() {
-    const gameContainer = document.getElementById('gameContainer');
-    const winMessage = document.getElementById('winMessage');
-    const bonusContainer = document.getElementById('bonusContainer');
-    
-    // Fade out current view
-    gameContainer.style.opacity = '0';
-    winMessage.style.opacity = '0';
-    
-    setTimeout(() => {
-        gameContainer.style.display = 'none';
-        winMessage.style.display = 'none';
-        bonusContainer.style.display = 'block';
+            const gameContainer = document.getElementById('gameContainer');
+            const winMessage = document.getElementById('winMessage');
+            const bonusContainer = document.getElementById('bonusContainer');
+            
+            gameContainer.style.opacity = '0';
+            winMessage.style.opacity = '0';
+            
+            setTimeout(() => {
+                gameContainer.style.display = 'none';
+                winMessage.style.display = 'none';
+                bonusContainer.style.display = 'block';
+                
+                const bonusCanvas = document.getElementById('bonusCanvas');
+                setCanvasSize(bonusCanvas, 280, 200);
+                initializeCanvas(bonusCanvas);
+                setupCanvasEvents(bonusCanvas);
+                
+                setTimeout(() => {
+                    bonusContainer.style.opacity = '1';
+                }, 50);
+            }, 300);
+        }
         
-        // Initialize bonus canvas
-        const bonusCanvas = document.getElementById('bonusCanvas');
-        setCanvasSize(bonusCanvas, 280, 200);  // Changed from 260 to 280 to match container
-        initializeCanvas(bonusCanvas);  // Added this line
-        setupCanvasEvents(bonusCanvas);
+        // Confetti Animation
+        function createConfetti() {
+            const confettiCount = 200;
+            const container = document.createElement('div');
+            container.className = 'confetti-container';
+            document.body.appendChild(container);
         
-        // Fade in bonus view
-        setTimeout(() => {
-            bonusContainer.style.opacity = '1';
-        }, 50);
-    }, 300);
-}
+            function createParticle() {
+                const particle = document.createElement('div');
+                const colors = ['#9333ea', '#ec4899', '#FFD700', '#FF69B4', '#00CED1'];
+                
+                particle.className = 'confetti-particle';
+                particle.style.background = colors[Math.floor(Math.random() * colors.length)];
+        
+                const x = Math.random() * window.innerWidth;
+                const y = -10;
+                const rotation = Math.random() * 360;
+                const speed = 3 + Math.random() * 2;
+                const rotationSpeed = (Math.random() - 0.5) * 10;
+                let currentY = y;
+                let currentRotation = rotation;
+        
+                container.appendChild(particle);
+        
+                function animate() {
+                    currentY += speed;
+                    currentRotation += rotationSpeed;
+                    particle.style.transform = `translate(${x}px, ${currentY}px) rotate(${currentRotation}deg)`;
+        
+                    if (currentY < window.innerHeight) {
+                        requestAnimationFrame(animate);
+                    } else {
+                        particle.remove();
+                    }
+                }
+        
+                animate();
+            }
+        
+            // Create multiple particles
+            for (let i = 0; i < confettiCount; i++) {
+                setTimeout(createParticle, Math.random() * 2000);
+            }
+        
+            // Remove container after animation
+            setTimeout(() => {
+                container.remove();
+            }, 5000);
+        }
         </script>
 </body>
 
