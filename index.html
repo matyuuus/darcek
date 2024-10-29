@@ -334,19 +334,37 @@
         }
 
         function setupCanvasEvents(canvas) {
-            canvas.addEventListener('mousedown', (e) => {
-                isDragging = true;
-                activeCanvas = canvas;
-                lastPosition = getCoordinates(e, canvas);
-            });
+    canvas.addEventListener('mousedown', (e) => {
+        isDragging = true;
+        activeCanvas = canvas;
+        lastPosition = getCoordinates(e, canvas);
+    });
 
-            canvas.addEventListener('mouseup', () => {
-                isDragging = false;
-            });
+    canvas.addEventListener('mouseup', () => {
+        isDragging = false;
+    });
 
-            canvas.addEventListener('mousemove', draw);
-            canvas.addEventListener('mouseleave', () => isDragging = false);
-        }
+    // Add touch events for mobile compatibility
+    canvas.addEventListener('touchstart', (e) => {
+        isDragging = true;
+        activeCanvas = canvas;
+        lastPosition = getCoordinates(e.touches[0], canvas);
+    });
+
+    canvas.addEventListener('touchend', () => {
+        isDragging = false;
+    });
+
+    canvas.addEventListener('mousemove', draw);
+    canvas.addEventListener('mouseleave', () => isDragging = false);
+
+    // Touch move event
+    canvas.addEventListener('touchmove', (e) => {
+        e.preventDefault(); // Prevent scrolling while touching
+        draw(e.touches[0]);
+    });
+}
+
 
         function getCoordinates(e, canvas) {
             const rect = canvas.getBoundingClientRect();
@@ -357,32 +375,33 @@
         }
 
         function draw(e) {
-            if (!isDragging || !activeCanvas) return;
-            e.preventDefault();
+    if (!isDragging || !activeCanvas) return;
+    e.preventDefault();
 
-            const ctx = activeCanvas.getContext('2d');
-            const coords = getCoordinates(e, activeCanvas);
-            const scale = window.devicePixelRatio || 1;
+    const ctx = activeCanvas.getContext('2d');
+    const coords = getCoordinates(e, activeCanvas);
+    const scale = window.devicePixelRatio || 1;
 
-            ctx.globalCompositeOperation = 'destination-out';
-            ctx.lineWidth = 35 * scale; // Zmenši veľkosť štetca na stieranie
-            ctx.lineCap = 'round';
-            ctx.lineJoin = 'round';
+    ctx.globalCompositeOperation = 'destination-out';
+    ctx.lineWidth = 35 * scale; // Smaller brush size for erasing
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
 
-            ctx.beginPath();
-            ctx.moveTo(lastPosition.x, lastPosition.y);
-            ctx.lineTo(coords.x, coords.y);
-            ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(lastPosition.x, lastPosition.y);
+    ctx.lineTo(coords.x, coords.y);
+    ctx.stroke();
 
-            lastPosition = coords;
+    lastPosition = coords;
 
-            // Kontrola pokroku pre bonusový canvas
-            if (activeCanvas.id === 'bonusCanvas') {
-                checkBonusProgress(activeCanvas);
-            } else {
-                checkGameProgress(activeCanvas);
-            }
-        }
+    // Check progress for bonus canvas
+    if (activeCanvas.id === 'bonusCanvas') {
+        checkBonusProgress(activeCanvas);
+    } else {
+        checkGameProgress(activeCanvas);
+    }
+}
+
 
         function checkBonusProgress(canvas) {
     const ctx = canvas.getContext('2d');
