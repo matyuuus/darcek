@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -15,69 +16,82 @@
             align-items: center;
             justify-content: center;
         }
+
         .card {
             width: 100%;
             max-width: 400px;
             background: white;
             border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
             overflow: hidden;
             margin: auto;
         }
+
         .gift-container {
             text-align: center;
             padding: 24px;
             cursor: pointer;
         }
+
         .gift-title {
             font-size: 24px;
             color: #9333ea;
             font-weight: bold;
             margin-bottom: 16px;
         }
+
         .gift-emoji {
             font-size: 72px;
             margin-bottom: 16px;
         }
+
         .gift-text {
             color: #666;
         }
+
         #gameContainer {
             display: none;
             background: linear-gradient(to right, #9333ea, #ec4899);
             padding: 24px;
             color: white;
         }
+
         .game-title {
             text-align: center;
             margin-bottom: 24px;
         }
+
         .game-title h2 {
             margin: 0 0 8px 0;
             font-size: 24px;
         }
+
         .canvas-section {
             margin: 30px auto;
             width: 260px;
         }
+
         .canvas-container {
             position: relative;
             margin: 0 auto;
         }
+
         .numbers-section {
             height: 80px;
         }
+
         .game-section {
             height: 200px;
             margin-top: 40px;
         }
+
         .content-layer {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(255,255,255,0.1);
+            background: rgba(255, 255, 255, 0.1);
             backdrop-filter: blur(4px);
             border-radius: 4px;
             display: flex;
@@ -85,12 +99,14 @@
             justify-content: center;
             z-index: 1;
         }
+
         .numbers-display {
             display: flex;
             gap: 24px;
             font-size: 20px;
             font-weight: bold;
         }
+
         .game-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -100,6 +116,7 @@
             padding: 16px;
             box-sizing: border-box;
         }
+
         .game-cell {
             display: flex;
             flex-direction: column;
@@ -107,10 +124,12 @@
             justify-content: center;
             text-align: center;
         }
+
         .game-cell strong {
             font-size: 18px;
             margin-bottom: 4px;
         }
+
         canvas {
             position: absolute;
             top: 0;
@@ -121,22 +140,25 @@
             z-index: 2;
             border-radius: 4px;
         }
+
         .win-message {
             position: fixed;
             inset: 0;
-            background: rgba(0,0,0,0.8);
+            background: rgba(0, 0, 0, 0.8);
             display: none;
             align-items: center;
             justify-content: center;
             z-index: 1000;
         }
+
         .win-content {
-            background: rgba(0,0,0,0.9);
+            background: rgba(0, 0, 0, 0.9);
             padding: 32px;
             border-radius: 8px;
             text-align: center;
             color: white;
         }
+
         .play-button {
             background: linear-gradient(to right, #9333ea, #ec4899);
             color: white;
@@ -149,54 +171,61 @@
             z-index: 1001;
             position: relative;
         }
+
         .play-button:hover {
             opacity: 0.9;
         }
+
         .section-title {
             text-align: center;
             margin-bottom: 8px;
             font-size: 14px;
             opacity: 0.9;
         }
+
         #bonusContainer {
-    display: none;
-    text-align: center;
-    padding: 24px;
-    background: linear-gradient(to right, #9333ea, #ec4899);
-    color: white;
-}
-.bonus-container {
-    position: relative;
-    width: 260px;
-    height: 200px;
-    margin: 30px auto;
-}
-.bonus-grid {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 12px;
-    padding: 16px;
-    box-sizing: border-box;
-    background: rgba(255,255,255,0.1);
-    backdrop-filter: blur(4px);
-    border-radius: 4px;
-    z-index: 1;
-}
-.bonus-cell {
-    font-size: 24px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: rgba(255,255,255,0.1);
-    border-radius: 4px;
-}
+            display: none;
+            text-align: center;
+            padding: 24px;
+            background: linear-gradient(to right, #9333ea, #ec4899);
+            color: white;
+        }
+
+        .bonus-container {
+            position: relative;
+            width: 260px;
+            height: 200px;
+            margin: 30px auto;
+        }
+
+        .bonus-grid {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            padding: 16px;
+            box-sizing: border-box;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(4px);
+            border-radius: 4px;
+            z-index: 1;
+        }
+
+        .bonus-cell {
+            font-size: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+        }
     </style>
 </head>
+
 <body>
     <div class="card">
         <div id="giftView" class="gift-container" onclick="startGame()">
@@ -314,11 +343,11 @@
         }
 
         function initializeBonusCanvas() {
-    const bonusCanvas = document.getElementById('bonusCanvas');
-    setCanvasSize(bonusCanvas, 260, 200); // upravená šírka na 260px aby sedela s kontajnerom
-    initializeCanvas(bonusCanvas);
-    setupCanvasEvents(bonusCanvas);
-}
+            const bonusCanvas = document.getElementById('bonusCanvas');
+            setCanvasSize(bonusCanvas, 260, 200); // upravená šírka na 260px aby sedela s kontajnerom
+            initializeCanvas(bonusCanvas);
+            setupCanvasEvents(bonusCanvas);
+        }
 
         function setCanvasSize(canvas, width, height) {
             canvas.width = width * window.devicePixelRatio;
@@ -334,36 +363,44 @@
         }
 
         function setupCanvasEvents(canvas) {
-    canvas.addEventListener('mousedown', (e) => {
-        isDragging = true;
-        activeCanvas = canvas;
-        lastPosition = getCoordinates(e, canvas);
-    });
+            // Mouse events
+            canvas.addEventListener('mousedown', (e) => {
+                isDragging = true;
+                activeCanvas = canvas;
+                lastPosition = getCoordinates(e, canvas);
+            });
 
-    canvas.addEventListener('mouseup', () => {
-        isDragging = false;
-    });
+            canvas.addEventListener('mouseup', () => {
+                isDragging = false;
+            });
 
-    // Add touch events for mobile compatibility
-    canvas.addEventListener('touchstart', (e) => {
-        isDragging = true;
-        activeCanvas = canvas;
-        lastPosition = getCoordinates(e.touches[0], canvas);
-    });
+            canvas.addEventListener('mousemove', (e) => {
+                if (isDragging) draw(e);
+            });
 
-    canvas.addEventListener('touchend', () => {
-        isDragging = false;
-    });
+            // Touch events
+            canvas.addEventListener('touchstart', (e) => {
+                e.preventDefault(); // Prevent scrolling on touch
+                isDragging = true;
+                activeCanvas = canvas;
+                lastPosition = getCoordinates(e.touches[0], canvas);
+            });
 
-    canvas.addEventListener('mousemove', draw);
-    canvas.addEventListener('mouseleave', () => isDragging = false);
+            canvas.addEventListener('touchend', () => {
+                isDragging = false;
+            });
 
-    // Touch move event
-    canvas.addEventListener('touchmove', (e) => {
-        e.preventDefault(); // Prevent scrolling while touching
-        draw(e.touches[0]);
-    });
-}
+            canvas.addEventListener('touchmove', (e) => {
+                e.preventDefault(); // Prevent scrolling while touching
+                if (isDragging) draw(e.touches[0]);
+            });
+
+            // Mouse leave to stop drawing if mouse exits the canvas
+            canvas.addEventListener('mouseleave', () => {
+                isDragging = false;
+            });
+        }
+
 
 
         function getCoordinates(e, canvas) {
@@ -375,49 +412,49 @@
         }
 
         function draw(e) {
-    if (!isDragging || !activeCanvas) return;
-    e.preventDefault();
+            if (!isDragging || !activeCanvas) return;
+            e.preventDefault();
 
-    const ctx = activeCanvas.getContext('2d');
-    const coords = getCoordinates(e, activeCanvas);
-    const scale = window.devicePixelRatio || 1;
+            const ctx = activeCanvas.getContext('2d');
+            const coords = getCoordinates(e, activeCanvas);
+            const scale = window.devicePixelRatio || 1;
 
-    ctx.globalCompositeOperation = 'destination-out';
-    ctx.lineWidth = 35 * scale; // Smaller brush size for erasing
-    ctx.lineCap = 'round';
-    ctx.lineJoin = 'round';
+            ctx.globalCompositeOperation = 'destination-out';
+            ctx.lineWidth = 35 * scale; // Smaller brush size for erasing
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
 
-    ctx.beginPath();
-    ctx.moveTo(lastPosition.x, lastPosition.y);
-    ctx.lineTo(coords.x, coords.y);
-    ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(lastPosition.x, lastPosition.y);
+            ctx.lineTo(coords.x, coords.y);
+            ctx.stroke();
 
-    lastPosition = coords;
+            lastPosition = coords;
 
-    // Check progress for bonus canvas
-    if (activeCanvas.id === 'bonusCanvas') {
-        checkBonusProgress(activeCanvas);
-    } else {
-        checkGameProgress(activeCanvas);
-    }
-}
+            // Check progress for bonus canvas
+            if (activeCanvas.id === 'bonusCanvas') {
+                checkBonusProgress(activeCanvas);
+            } else {
+                checkGameProgress(activeCanvas);
+            }
+        }
 
 
         function checkBonusProgress(canvas) {
-    const ctx = canvas.getContext('2d');
-    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    const pixels = imageData.data;
-    let transparent = 0;
+            const ctx = canvas.getContext('2d');
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const pixels = imageData.data;
+            let transparent = 0;
 
-    for (let i = 0; i < pixels.length; i += 4) {
-        if (pixels[i + 3] < 127) transparent++;
-    }
+            for (let i = 0; i < pixels.length; i += 4) {
+                if (pixels[i + 3] < 127) transparent++;
+            }
 
-    const progress = transparent / (pixels.length / 4);
-    if (progress > 0.89) {
-        document.getElementById('bonusWinMessage').style.display = 'flex';
-    }
-}
+            const progress = transparent / (pixels.length / 4);
+            if (progress > 0.89) {
+                document.getElementById('bonusWinMessage').style.display = 'flex';
+            }
+        }
 
         function checkGameProgress(canvas) {
             const ctx = canvas.getContext('2d');
@@ -440,4 +477,5 @@
         });
     </script>
 </body>
+
 </html>
