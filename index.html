@@ -140,6 +140,13 @@
             z-index: 2;
             border-radius: 4px;
             touch-action: none;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            -khtml-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
         }
 
         .win-message {
@@ -315,10 +322,10 @@
     </div>
 
     <script>
-        let activeCanvas;
+        let activeCanvas = null;
         let isDragging = false;
         let lastPosition = { x: 0, y: 0 };
-
+        
         function startGame() {
             document.getElementById('giftView').style.display = 'none';
             document.getElementById('gameContainer').style.display = 'block';
@@ -336,139 +343,105 @@
             setupCanvasEvents(numbersCanvas);
         }
 
-        function startBonus() {
-            document.getElementById('gameContainer').style.display = 'none';
-            document.getElementById('winMessage').style.display = 'none';
-            document.getElementById('bonusContainer').style.display = 'block';
-            initializeBonusCanvas();
-        }
-
-        function initializeBonusCanvas() {
-            const bonusCanvas = document.getElementById('bonusCanvas');
-            setCanvasSize(bonusCanvas, 260, 200); // upravená šírka na 260px aby sedela s kontajnerom
-            initializeCanvas(bonusCanvas);
-            setupCanvasEvents(bonusCanvas);
-        }
-
         function setCanvasSize(canvas, width, height) {
-            canvas.width = width * window.devicePixelRatio;
-            canvas.height = height * window.devicePixelRatio;
+            const scale = window.devicePixelRatio || 1;
+            canvas.width = width * scale;
+            canvas.height = height * scale;
             canvas.style.width = width + 'px';
             canvas.style.height = height + 'px';
+            
+            // Initialize the canvas with the gray overlay
+            const ctx = canvas.getContext('2d');
+            ctx.scale(scale, scale);
+            ctx.fillStyle = 'rgba(200, 200, 200, 1)';
+            ctx.fillRect(0, 0, width, height);
         }
 
         function initializeCanvas(canvas) {
             const ctx = canvas.getContext('2d');
+            const width = canvas.width / (window.devicePixelRatio || 1);
+            const height = canvas.height / (window.devicePixelRatio || 1);
             ctx.fillStyle = 'rgba(200, 200, 200, 1)';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillRect(0, 0, width, height);
+        }
+
+        function getCoordinates(event, canvas) {
+            const rect = canvas.getBoundingClientRect();
+            const scale = window.devicePixelRatio || 1;
+            
+            let clientX, clientY;
+            
+            if (event.touches && event.touches[0]) {
+                clientX = event.touches[0].clientX;
+                clientY = event.touches[0].clientY;
+            } else {
+                clientX = event.clientX;
+                clientY = event.clientY;
+            }
+            
+            return {
+                x: clientX - rect.left,
+                y: clientY - rect.top
+            };
         }
 
         function setupCanvasEvents(canvas) {
-    // Mouse events
-    canvas.addEventListener('mousedown', (e) => {
-        isDragging = true;
-        activeCanvas = canvas;
-        lastPosition = getCoordinates(e, canvas);
-    });
+            // Mouse Events
+            canvas.addEventListener('mousedown', handleStart);
+            canvas.addEventListener('mousemove', handleMove);
+            canvas.addEventListener('mouseup', handleEnd);
+            canvas.addEventListener('mouseout', handleEnd);
+            
+            // Touch Events
+            canvas.addEventListener('touchstart', handleStart, { passive: false });
+            canvas.addEventListener('touchmove', handleMove, { passive: false });
+            canvas.addEventListener('touchend', handleEnd, { passive: false });
+            canvas.addEventListener('touchcancel', handleEnd, { passive: false });
+        }
 
-    canvas.addEventListener('mouseup', () => {
-        isDragging = false;
-    });
-
-    canvas.addEventListener('mousemove', draw);
-    canvas.addEventListener('mouseleave', () => isDragging = false);
-
-    // Touch events
-    canvas.addEventListener('touchstart', (e) => {
-        e.preventDefault(); // Prevent scrolling
-        isDragging = true;
-        activeCanvas = canvas;
-        lastPosition = getCoordinates(e.touches[0], canvas);
-    });
-
-    canvas.addEventListener('touchend', () => {
-        isDragging = false;
-    });
-
-    canvas.addEventListener('touchmove', (e) => {
-        e.preventDefault(); // Prevent scrolling
-        draw(e.touches[0]);
-    });
-}
-
-
-        function startDrawing(touchEvent) {
+        function handleStart(e) {
+            e.preventDefault();
             isDragging = true;
-            lastPosition = getCoordinates(touchEvent, activeCanvas);
+            activeCanvas = e.target;
+            lastPosition = getCoordinates(e, activeCanvas);
         }
 
-        function stopDrawing() {
-            isDragging = false;
-        }
-
-
-
-        function getCoordinates(e, canvas) {
-    const rect = canvas.getBoundingClientRect();
-    const scale = window.devicePixelRatio || 1;
-
-    let x, y;
-    if (e.touches) {
-        x = (e.touches[0].clientX - rect.left) * scale;
-        y = (e.touches[0].clientY - rect.top) * scale;
-    } else {
-        x = (e.clientX - rect.left) * scale;
-        y = (e.clientY - rect.top) * scale;
-    }
-    
-    return { x, y };
-}
-
-
-
-
-        function draw(e) {
+        function handleMove(e) {
             if (!isDragging || !activeCanvas) return;
             e.preventDefault();
-
+            
             const ctx = activeCanvas.getContext('2d');
-            const coords = getCoordinates(e, activeCanvas);
-
+            const currentPosition = getCoordinates(e, activeCanvas);
+            const scale = window.devicePixelRatio || 1;
+            
+            // Reset the transformation matrix
+            ctx.setTransform(1, 0, 0, 1, 0, 0);
+            // Scale for device pixel ratio
+            ctx.scale(scale, scale);
+            
             ctx.globalCompositeOperation = 'destination-out';
-            ctx.lineWidth = 35 * (window.devicePixelRatio || 1);
+            ctx.lineWidth = 35;
             ctx.lineCap = 'round';
             ctx.lineJoin = 'round';
-
+            
             ctx.beginPath();
             ctx.moveTo(lastPosition.x, lastPosition.y);
-            ctx.lineTo(coords.x, coords.y);
+            ctx.lineTo(currentPosition.x, currentPosition.y);
             ctx.stroke();
-
-            lastPosition = coords;
-
+            
+            lastPosition = currentPosition;
+            
             if (activeCanvas.id === 'bonusCanvas') {
                 checkBonusProgress(activeCanvas);
-            } else if (activeCanvas.id === 'gameCanvas') { // Only check game progress for game canvas
+            } else if (activeCanvas.id === 'gameCanvas') {
                 checkGameProgress(activeCanvas);
             }
         }
 
-
-
-        function checkBonusProgress(canvas) {
-            const ctx = canvas.getContext('2d');
-            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-            const pixels = imageData.data;
-            let transparent = 0;
-
-            for (let i = 0; i < pixels.length; i += 4) {
-                if (pixels[i + 3] < 127) transparent++;
-            }
-
-            const progress = transparent / (pixels.length / 4);
-            if (progress > 0.89) {
-                document.getElementById('bonusWinMessage').style.display = 'flex';
-            }
+        function handleEnd(e) {
+            e.preventDefault();
+            isDragging = false;
+            activeCanvas = null;
         }
 
         function checkGameProgress(canvas) {
@@ -487,9 +460,30 @@
             }
         }
 
-        document.addEventListener('mouseup', () => {
-            isDragging = false;
-        });
+        function checkBonusProgress(canvas) {
+            const ctx = canvas.getContext('2d');
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const pixels = imageData.data;
+            let transparent = 0;
+
+            for (let i = 0; i < pixels.length; i += 4) {
+                if (pixels[i + 3] < 127) transparent++;
+            }
+
+            const progress = transparent / (pixels.length / 4);
+            if (progress > 0.89) {
+                document.getElementById('bonusWinMessage').style.display = 'flex';
+            }
+        }
+
+        function startBonus() {
+            document.getElementById('gameContainer').style.display = 'none';
+            document.getElementById('winMessage').style.display = 'none';
+            document.getElementById('bonusContainer').style.display = 'block';
+            const bonusCanvas = document.getElementById('bonusCanvas');
+            setCanvasSize(bonusCanvas, 260, 200);
+            setupCanvasEvents(bonusCanvas);
+        }
     </script>
 </body>
 
