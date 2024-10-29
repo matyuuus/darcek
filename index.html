@@ -366,6 +366,7 @@
         function setupCanvasEvents(canvas) {
     // Mouse events
     canvas.addEventListener('mousedown', (e) => {
+        e.preventDefault();
         isDragging = true;
         activeCanvas = canvas;
         lastPosition = getCoordinates(e, canvas);
@@ -396,6 +397,7 @@
         if (isDragging) draw(e.touches[0]);
     });
 }
+
 
 
 
