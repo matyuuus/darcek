@@ -60,14 +60,20 @@
         }
     
         .gift-title {
-            font-size: 28px;
-            font-weight: 600;
-            letter-spacing: -0.02em;
-            margin-bottom: 24px;
-            background: linear-gradient(135deg, #9333ea, #ec4899);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
+    font-size: 28px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    margin-bottom: 24px;
+    background: linear-gradient(135deg, #9333ea, #ec4899);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;  /* Space between lines */
+}
+.gift-title span {
+    display: block;
+}
     
         .gift-emoji {
             font-size: 72px;
@@ -472,7 +478,6 @@
     width: 100%;
     height: 100%;
     pointer-events: none;
-    z-index: 999;
 }
 
 .confetti-particle {
@@ -483,13 +488,27 @@
     pointer-events: none;
     will-change: transform;
 }
+
+/* Make sure your win message overlay has the correct z-index */
+.win-message {
+    /* ... existing styles ... */
+    z-index: 1000;  /* This puts it between confetti layers */
+}
+
+.win-content {
+    /* ... existing styles ... */
+    z-index: 1002;  /* This puts it between middle and front confetti layers */
+}
     </style>
 </head>
 <body>
     <div class="card">
         <!-- Gift View Section -->
         <div id="giftView" class="gift-container" onclick="startGame()">
-            <div class="gift-title">Všetko najlepšie láska</div>
+            <div class="gift-title">
+                <span>Čaukó láska</span>
+                <span>Všetko najlepšie</span>
+            </div>
             <div class="gift-emoji">🎁</div>
             <div class="gift-text">Klikni na darček</div>
         </div>
@@ -575,7 +594,7 @@
             <div class="win-content">
                 <div class="win-icon">🎉</div>
                 <h3>Gratulujem!</h3>
-                <p class="win-text">Vyhral/a si 5€ v tejto lotérii!</p>
+                <p class="win-text">Vyhrala si 5€ v tejto lotérii!</p>
                 <p class="bonus-question">Chceš si zahrať o bonus?</p>
                 <button class="play-button" onclick="startBonus()">
                     <span class="button-text">Hrat!</span>
@@ -735,7 +754,7 @@
             ctx.setTransform(scale, 0, 0, scale, 0, 0);
             
             ctx.globalCompositeOperation = 'destination-out';
-            ctx.lineWidth = 35;
+            ctx.lineWidth = 25;
             ctx.lineCap = 'round';
             ctx.lineJoin = 'round';
             
@@ -770,7 +789,7 @@
             }
         
             const progress = transparent / (pixels.length / 4);
-            if (progress > 0.9) {  // Changed to 90%
+            if (progress > 0.95) {  // Changed to 90%
                 document.getElementById('winMessage').style.display = 'flex';
             }
         }
@@ -786,7 +805,7 @@
             }
         
             const progress = transparent / (pixels.length / 4);
-            if (progress > 0.9) {  // Changed to 90%
+            if (progress > 0.95) {  // Changed to 90%
                 document.getElementById('bonusWinMessage').style.display = 'flex';
                 createConfetti();  // Added confetti on bonus win
             }
@@ -818,53 +837,66 @@
         
         // Confetti Animation
         function createConfetti() {
-            const confettiCount = 200;
-            const container = document.createElement('div');
-            container.className = 'confetti-container';
-            document.body.appendChild(container);
+    // Create three layers of confetti
+    createConfettiLayer(30, 999);     // Background layer (behind overlay)
+    createConfettiLayer(25, 1001);    // Middle layer (between overlay and message)
+    createConfettiLayer(25, 1003);    // Front layer (in front of everything)
+}
+
+function createConfettiLayer(count, zIndex) {
+    const container = document.createElement('div');
+    container.className = 'confetti-container';
+    container.style.zIndex = zIndex;
+    document.body.appendChild(container);
+
+    function createParticle() {
+        const particle = document.createElement('div');
+        const colors = ['#9333ea', '#ec4899', '#FFD700', '#FF69B4', '#00CED1'];
         
-            function createParticle() {
-                const particle = document.createElement('div');
-                const colors = ['#9333ea', '#ec4899', '#FFD700', '#FF69B4', '#00CED1'];
-                
-                particle.className = 'confetti-particle';
-                particle.style.background = colors[Math.floor(Math.random() * colors.length)];
-        
-                const x = Math.random() * window.innerWidth;
-                const y = -10;
-                const rotation = Math.random() * 360;
-                const speed = 3 + Math.random() * 2;
-                const rotationSpeed = (Math.random() - 0.5) * 10;
-                let currentY = y;
-                let currentRotation = rotation;
-        
-                container.appendChild(particle);
-        
-                function animate() {
-                    currentY += speed;
-                    currentRotation += rotationSpeed;
-                    particle.style.transform = `translate(${x}px, ${currentY}px) rotate(${currentRotation}deg)`;
-        
-                    if (currentY < window.innerHeight) {
-                        requestAnimationFrame(animate);
-                    } else {
-                        particle.remove();
-                    }
-                }
-        
-                animate();
+        particle.className = 'confetti-particle';
+        particle.style.background = colors[Math.floor(Math.random() * colors.length)];
+
+        const x = Math.random() * window.innerWidth;
+        const y = -10;
+        const rotation = Math.random() * 360;
+        const speed = 2 + Math.random() * 3;
+        const rotationSpeed = (Math.random() - 0.5) * 10;
+        const maxDistance = window.innerHeight - 100 + Math.random() * 200;
+        let currentY = y;
+        let currentRotation = rotation;
+        let opacity = 1;
+
+        container.appendChild(particle);
+
+        function animate() {
+            currentY += speed;
+            currentRotation += rotationSpeed;
+            
+            if (currentY > maxDistance - 100) {
+                opacity = Math.max(0, (maxDistance - currentY) / 100);
             }
-        
-            // Create multiple particles
-            for (let i = 0; i < confettiCount; i++) {
-                setTimeout(createParticle, Math.random() * 2000);
+
+            particle.style.transform = `translate(${x}px, ${currentY}px) rotate(${currentRotation}deg)`;
+            particle.style.opacity = opacity;
+
+            if (currentY < maxDistance && opacity > 0) {
+                requestAnimationFrame(animate);
+            } else {
+                particle.remove();
             }
-        
-            // Remove container after animation
-            setTimeout(() => {
-                container.remove();
-            }, 5000);
         }
+
+        animate();
+    }
+
+    for (let i = 0; i < count; i++) {
+        setTimeout(createParticle, Math.random() * 2500);
+    }
+
+    setTimeout(() => {
+        container.remove();
+    }, 7000);
+}
         </script>
 </body>
 
